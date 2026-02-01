@@ -1,5 +1,5 @@
 // Import required modules
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
 import puppeteer from "puppeteer-core";
 import fs from "fs";                     // File system to read HTML template
 import path from "path";                 // Path module to handle file paths
@@ -74,7 +74,14 @@ export const generateInvoice = async (req, res) => {
         console.log("🚀 Launching Chromium from:", executablePath);
         
         browser = await puppeteer.launch({
-          args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+          args: [
+            ...chromium.args,
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--no-zygote",
+            "--single-process",
+          ],
           defaultViewport: chromium.defaultViewport,
           executablePath: executablePath,
           headless: chromium.headless,
@@ -194,7 +201,14 @@ export const downloadSavedInvoice = async (req, res) => {
                 console.log("🚀 Launching Chromium from:", executablePath);
                 
                 browser = await puppeteer.launch({
-                    args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+                    args: [
+                        ...chromium.args,
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--no-zygote",
+                        "--single-process",
+                    ],
                     defaultViewport: chromium.defaultViewport,
                     executablePath: executablePath,
                     headless: chromium.headless,
