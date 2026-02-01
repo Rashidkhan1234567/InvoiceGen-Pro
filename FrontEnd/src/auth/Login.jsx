@@ -68,7 +68,7 @@ const InputField = ({ label, type = 'text', id, icon: Icon, value, onChange, pla
 };
 
 // --- Standalone Login Form Component ---
- const LoginForm = () => {
+const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -91,12 +91,16 @@ const InputField = ({ label, type = 'text', id, icon: Icon, value, onChange, pla
         }
       );
       if (res.data.success) {
+        // Store token in localStorage
+        if (res.data.token) {
+          localStorage.setItem('access_token', res.data.token);
+        }
         navigate("/dashBoard");
       } else {
         setMessage(res.data.message || "Invalid Email Or Password!");
         setTimeout(() => setMessage(''), 3000);
       }
-  
+
     } catch (err) {
       setMessage(
         err?.response?.data?.message || "Something went wrong!"
@@ -104,7 +108,7 @@ const InputField = ({ label, type = 'text', id, icon: Icon, value, onChange, pla
       setTimeout(() => setMessage(''), 3000);
     }
   };
-  
+
   return (
     <div className="w-full max-w-md bg-white p-8 sm:p-10 rounded-xl shadow-2xl border border-gray-200 transition-all duration-300">
       <form onSubmit={handleLogin} className="space-y-6">
@@ -144,7 +148,7 @@ const InputField = ({ label, type = 'text', id, icon: Icon, value, onChange, pla
 
         {/* Removed 'Sign up now' button */}
         <div className="text-center text-sm text-gray-500 pt-2">
-            New here? Please visit the <Link to={'/signUp'}><span className='font-bold underline '>SignUp</span></Link>
+          New here? Please visit the <Link to={'/signUp'}><span className='font-bold underline '>SignUp</span></Link>
         </div>
       </form>
     </div>

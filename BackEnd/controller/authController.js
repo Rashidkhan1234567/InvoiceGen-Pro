@@ -119,15 +119,25 @@ export const login = async (req, res) => {
       process.env.JWT_SECRET_KEY,
       { expiresIn: "7d" }
     );
+    
+    // Set cookie (works for same-origin)
     res.cookie("access_token", access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+    
+    // Also return token in response (works for cross-origin)
     res.status(200).json({
       success: true,
-      message: "Login successful!"
+      message: "Login successful!",
+      token: access_token,
+      user: {
+        id: findUser._id,
+        email: findUser.email,
+        name: findUser.name
+      }
     });
   } catch (error) {
     console.log(error);
