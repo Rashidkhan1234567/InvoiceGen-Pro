@@ -87,20 +87,26 @@ export const generateInvoice = async (req, res) => {
       .replace("{{discount}}", discount.toFixed(2))
       .replace("{{grandTotal}}", grandTotal.toFixed(2));
 
-    // Launch settings for Vercel vs Local
+    // Launch settings for Vercel (Node 18) vs Local
     try {
       if (process.env.NODE_ENV === "production") {
         browser = await puppeteer.launch({
-          args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
+          args: [
+            ...chromium.args,
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--no-zygote",
+            "--disable-gpu"
+          ],
           defaultViewport: chromium.defaultViewport,
           executablePath: await chromium.executablePath(),
           headless: chromium.headless,
-          ignoreHTTPSErrors: true,
         });
       } else {
         console.log("🛠️ Launching Local Puppeteer...");
         browser = await puppeteer.launch({
-          args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu"],
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
           headless: true,
         });
       }
@@ -225,20 +231,26 @@ export const downloadSavedInvoice = async (req, res) => {
             .replace("{{discount}}", discount.toFixed(2))
             .replace("{{grandTotal}}", grandTotal.toFixed(2));
 
-        // Launch settings for Vercel vs Local
+        // Launch settings for Vercel (Node 18) vs Local
         try {
             if (process.env.NODE_ENV === "production") {
                 browser = await puppeteer.launch({
-                    args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
+                    args: [
+                        ...chromium.args,
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--no-zygote",
+                        "--disable-gpu"
+                    ],
                     defaultViewport: chromium.defaultViewport,
                     executablePath: await chromium.executablePath(),
                     headless: chromium.headless,
-                    ignoreHTTPSErrors: true,
                 });
             } else {
                 console.log("🛠️ Launching Local Puppeteer...");
                 browser = await puppeteer.launch({
-                    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu"],
+                    args: ["--no-sandbox", "--disable-setuid-sandbox"],
                     headless: true,
                 });
             }
