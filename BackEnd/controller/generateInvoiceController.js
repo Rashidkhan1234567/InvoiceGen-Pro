@@ -87,16 +87,21 @@ export const generateInvoice = async (req, res) => {
       .replace("{{discount}}", discount.toFixed(2))
       .replace("{{grandTotal}}", grandTotal.toFixed(2));
 
-    // Launch settings for Vercel vs Local
+    // Launch settings for Node 20+ (Vercel AL2023)
     try {
-      console.log("🚀 Node version:", process.version);
-      
       if (process.env.NODE_ENV === "production") {
-        const executablePath = await chromium.executablePath();
         browser = await puppeteer.launch({
-          args: chromium.args,
+          args: [
+            ...chromium.args,
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--no-zygote",
+            "--disable-gpu",
+            "--single-process",
+          ],
           defaultViewport: chromium.defaultViewport,
-          executablePath: executablePath,
+          executablePath: await chromium.executablePath(),
           headless: chromium.headless,
         });
       } else {
@@ -111,6 +116,7 @@ export const generateInvoice = async (req, res) => {
       console.error("❌ Browser launch failed:", launchError);
       throw launchError;
     }
+
     
     const page = await browser.newPage();            
     await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -227,16 +233,21 @@ export const downloadSavedInvoice = async (req, res) => {
             .replace("{{discount}}", discount.toFixed(2))
             .replace("{{grandTotal}}", grandTotal.toFixed(2));
 
-        // Launch settings for Vercel vs Local
+        // Launch settings for Node 20+ (Vercel AL2023)
         try {
-            console.log("🚀 Node version:", process.version);
-            
             if (process.env.NODE_ENV === "production") {
-                const executablePath = await chromium.executablePath();
                 browser = await puppeteer.launch({
-                    args: chromium.args,
+                    args: [
+                        ...chromium.args,
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--no-zygote",
+                        "--disable-gpu",
+                        "--single-process",
+                    ],
                     defaultViewport: chromium.defaultViewport,
-                    executablePath: executablePath,
+                    executablePath: await chromium.executablePath(),
                     headless: chromium.headless,
                 });
             } else {
