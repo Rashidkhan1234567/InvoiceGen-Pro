@@ -68,21 +68,28 @@ export const generateInvoice = async (req, res) => {
       .replace("{{grandTotal}}", grandTotal.toFixed(2));
 
     // Launch settings for Vercel vs Local
-    if (process.env.NODE_ENV === "production") {
-      browser = await puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-      });
-    } else {
-      // For local development, assume regular puppeteer or a fallback
-      // Since we changed to puppeteer-core, local may need more config or use standard puppeteer
-      // For now, let's keep it production focused as per user's immediate need
-      browser = await puppeteer.launch({
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        headless: true,
-      });
+    try {
+      if (process.env.NODE_ENV === "production") {
+        const executablePath = await chromium.executablePath();
+        console.log("🚀 Launching Chromium from:", executablePath);
+        
+        browser = await puppeteer.launch({
+          args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+          defaultViewport: chromium.defaultViewport,
+          executablePath: executablePath,
+          headless: chromium.headless,
+        });
+      } else {
+        console.log("🛠️ Launching Local Puppeteer...");
+        browser = await puppeteer.launch({
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+          headless: true,
+        });
+      }
+      console.log("✅ Browser launched successfully");
+    } catch (launchError) {
+      console.error("❌ Browser launch failed:", launchError);
+      throw new Error(`Browser launch failed: ${launchError.message}`);
     }
     
     const page = await browser.newPage();            
@@ -114,7 +121,7 @@ export const generateInvoice = async (req, res) => {
     res.send(pdfBuffer);
 
   } catch (err) {
-    console.error("Error generating PDF:", err);
+    console.error("🔥 Error in generateInvoice:", err);
     if (browser) await browser.close();
     res.status(500).send(`Error generating PDF: ${err.message}`);
   }
@@ -180,12 +187,31 @@ export const downloadSavedInvoice = async (req, res) => {
             .replace("{{discount}}", discount.toFixed(2))
             .replace("{{grandTotal}}", grandTotal.toFixed(2));
 
-        const browser = await puppeteer.launch({
-            args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath(),
-            headless: chromium.headless,
-        });
+        // Launch settings for Vercel vs Local
+        try {
+            if (process.env.NODE_ENV === "production") {
+                const executablePath = await chromium.executablePath();
+                console.log("🚀 Launching Chromium from:", executablePath);
+                
+                browser = await puppeteer.launch({
+                    args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+                    defaultViewport: chromium.defaultViewport,
+                    executablePath: executablePath,
+                    headless: chromium.headless,
+                });
+            } else {
+                console.log("🛠️ Launching Local Puppeteer...");
+                browser = await puppeteer.launch({
+                    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+                    headless: true,
+                });
+            }
+            console.log("✅ Browser launched successfully");
+        } catch (launchError) {
+            console.error("❌ Browser launch failed:", launchError);
+            throw new Error(`Browser launch failed: ${launchError.message}`);
+        }
+
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 60000 });
         const pdfBuffer = await page.pdf({
@@ -202,7 +228,8 @@ export const downloadSavedInvoice = async (req, res) => {
         res.send(pdfBuffer);
 
     } catch (err) {
-        console.error("Error downloading PDF:", err);
-        res.status(500).send("Error downloading PDF");
+        console.error("🔥 Error downloading PDF:", err);
+        if (browser) await browser.close();
+        res.status(500).send(`Error downloading PDF: ${err.message}`);
     }
 };
