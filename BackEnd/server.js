@@ -1,4 +1,4 @@
-// import express from "express";
+import express from "express";
 import { configDotenv } from "dotenv";
 import connectDB from "./config/db.js";
 import cors from "cors";
@@ -10,14 +10,15 @@ import generateInvoiceRoutes from "./routes/generateInvoiceRoutes.js";
 import servicesRoutes from "./routes/serviesRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 
-// configDotenv();
 
-// const app = express();
+configDotenv();
+
+const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: true,
+   origin: true,
   credentials: true,
 }));
 
@@ -27,6 +28,7 @@ app.use(cors({
 //   next();
 // });
 
+app.use("/auth", authRoutes);
 app.use(clientsRoutes);
 app.use(generateInvoiceRoutes);
 app.use(servicesRoutes);
@@ -40,15 +42,9 @@ app.use(analyticsRoutes);
 // export default app;
 
 
-import express from "express";
-import { configDotenv } from "dotenv";
-import connectDB from "./config/db.js";
 
-configDotenv();
 
-const app = express();
 
-app.use("/auth", authRoutes);
 
 // DB connect middleware
 app.use(async (req, res, next) => {
