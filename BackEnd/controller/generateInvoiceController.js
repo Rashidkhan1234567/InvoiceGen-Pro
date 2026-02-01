@@ -92,18 +92,11 @@ export const generateInvoice = async (req, res) => {
       console.log("🚀 Node version:", process.version);
       
       if (process.env.NODE_ENV === "production") {
+        const executablePath = await chromium.executablePath();
         browser = await puppeteer.launch({
-          args: [
-            ...chromium.args,
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--no-zygote",
-            "--disable-gpu",
-            "--font-render-hinting=none"
-          ],
+          args: chromium.args,
           defaultViewport: chromium.defaultViewport,
-          executablePath: await chromium.executablePath(),
+          executablePath: executablePath,
           headless: chromium.headless,
         });
       } else {
@@ -239,18 +232,11 @@ export const downloadSavedInvoice = async (req, res) => {
             console.log("🚀 Node version:", process.version);
             
             if (process.env.NODE_ENV === "production") {
+                const executablePath = await chromium.executablePath();
                 browser = await puppeteer.launch({
-                    args: [
-                        ...chromium.args,
-                        "--no-sandbox",
-                        "--disable-setuid-sandbox",
-                        "--disable-dev-shm-usage",
-                        "--no-zygote",
-                        "--disable-gpu",
-                        "--font-render-hinting=none"
-                    ],
+                    args: chromium.args,
                     defaultViewport: chromium.defaultViewport,
-                    executablePath: await chromium.executablePath(),
+                    executablePath: executablePath,
                     headless: chromium.headless,
                 });
             } else {
