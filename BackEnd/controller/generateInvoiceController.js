@@ -20,27 +20,21 @@ const __dirname = path.dirname(__filename);
 export const generateInvoice = async (req, res) => {
   let browser = null;
   try {
-    // ------------------------
-    const { items,formData,template,status,discountAmount,sendOptions } = req.body;
-    // ------------------------
-    // Step 2: Select the correct HTML template
-    // Template folder: backend/utils/template1.html etc.
-    // '..' moves from controller folder to backend root, then utils
-    // ------------------------
+    const { items, formData, template, status, discountAmount, sendOptions } = req.body;
     const templatePath = path.join(__dirname, "..", "utils", `${template}.html`);
 
-    // Read HTML file as string
+    if (!fs.existsSync(templatePath)) {
+      return res.status(400).send("Template not found");
+    }
+
     let html = fs.readFileSync(templatePath, "utf-8");
 
-    // ------------------------
-    // Step 3: Replace placeholders in template with real data
-    // ------------------------
+    // Replace placeholders
     html = html.replace("{{clientName}}", formData.clientName)
                .replace("{{clientEmail}}", formData.clientEmail)
                .replaceAll("{{invoiceId}}", formData.invoiceNumber)
                .replace("{{date}}", formData.dueDate);
     
-    // Fetch sender details
     const user = await UserModel.findById(req.user._id);
     const senderName = user ? user.name : "Sender";
     const senderEmail = user ? user.email : "";
@@ -48,95 +42,81 @@ export const generateInvoice = async (req, res) => {
     html = html.replace("{{senderName}}", senderName)
                .replace("{{senderEmail}}", senderEmail);
 
-    // ------------------------
-    // Step 4: Generate table rows dynamically for items
-    // ------------------------
-   // ------------------------
-// Step 4: Generate table rows dynamically
-// ------------------------
-let subTotal = 0;
+    let subTotal = 0;
+    let itemsHtml = items.map(i => {
+      const qty = Number(i.quantity);
+      const price = Number(i.price);
+      const rowTotal = qty * price;
+      subTotal += rowTotal;
+      return `
+        <tr class="border-thin">
+          <td class="py-4 px-4 font-medium">${i.description}</td>
+          <td class="py-4 px-4 text-center">${qty}</td>
+          <td class="py-4 px-4 text-center">$${price.toFixed(2)}</td>
+          <td class="py-4 px-4 text-right font-bold">$${rowTotal.toFixed(2)}</td>
+        </tr>
+      `;
+    }).join("");
 
-let itemsHtml = items.map(i => {
-  const qty = Number(i.quantity);
-  const price = Number(i.price);
-  const rowTotal = qty * price;
+    const discount = Number(discountAmount || 0);
+    const grandTotal = subTotal - discount;
 
-  subTotal += rowTotal;
+    html = html
+      .replace("{{items}}", itemsHtml)
+      .replace("{{subTotal}}", subTotal.toFixed(2))
+      .replace("{{discount}}", discount.toFixed(2))
+      .replace("{{grandTotal}}", grandTotal.toFixed(2));
 
-  return `
-    <tr class="border-thin">
-      <td class="py-4 px-4 font-medium">${i.description}</td>
-      <td class="py-4 px-4 text-center">${qty}</td>
-      <td class="py-4 px-4 text-center">$${price.toFixed(2)}</td>
-      <td class="py-4 px-4 text-right font-bold">$${rowTotal.toFixed(2)}</td>
-    </tr>
-  `;
-}).join("");
-
-// ------------------------
-// Step 5: Calculate totals
-// ------------------------
-const discount = Number(discountAmount || 0);
-const grandTotal = subTotal - discount;
-
-// ------------------------
-// Step 6: Replace placeholders
-// ------------------------
-html = html
-  .replace("{{items}}", itemsHtml)
-  .replace("{{subTotal}}", subTotal.toFixed(2))
-  .replace("{{discount}}", discount.toFixed(2))
-  .replace("{{grandTotal}}", grandTotal.toFixed(2));
-
-    // ------------------------
-    // Step 5: Launch Puppeteer with chrome-aws-lambda for serverless
-    // ------------------------
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-    });
+    // Launch settings for Vercel vs Local
+    if (process.env.NODE_ENV === "production") {
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+    } else {
+      // For local development, assume regular puppeteer or a fallback
+      // Since we changed to puppeteer-core, local may need more config or use standard puppeteer
+      // For now, let's keep it production focused as per user's immediate need
+      browser = await puppeteer.launch({
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        headless: true,
+      });
+    }
+    
     const page = await browser.newPage();            
-
-    // Use domcontentloaded instead of networkidle0 to avoid timeout
     await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
     const pdfBuffer = await page.pdf({               
       format: 'A4',
       printBackground: true,
-      margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" } // Optional
+      margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" } 
     });
 
-    await browser.close();  // Close browser
-    // save invoice in histry
+    await browser.close();  
+
     await invoiceModel.create({
       user: req.user._id,
       invoiceId: crypto.randomUUID(),
       clientName: formData.clientName,
-      invoiceNumber:formData.invoiceNumber,
-      totalAmount:grandTotal,
+      invoiceNumber: formData.invoiceNumber,
+      totalAmount: grandTotal,
       status,
       dueDate: formData.dueDate,
     });
     
-    // ------------------------
-    // Step 6: Send PDF back to frontend
-    // ------------------------
     res.set({
       "Content-Type": "application/pdf",
-      "Content-Disposition": "inline; filename=Invoice_3456789.pdf",
+      "Content-Disposition": `inline; filename=Invoice_${formData.invoiceNumber}.pdf`,
     });
     
     res.send(pdfBuffer);
-      // Send the PDF file
 
   } catch (err) {
-    // ------------------------
-    // Step 7: Error handling
-    // ------------------------
     console.error("Error generating PDF:", err);
-    res.status(500).send("Error generating PDF");
+    if (browser) await browser.close();
+    res.status(500).send(`Error generating PDF: ${err.message}`);
   }
 };
 
