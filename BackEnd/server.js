@@ -22,7 +22,9 @@ app.use(clientsRouts)
 app.use(generateInvoiceRoutes)
 app.use(serviesRoutes)
 app.use(analyticsRoutes)
+
+// Connect to database
 connentDB()
-app.listen(process.env.PORT,()=>{
-   console.log("SERVER IS RUNNING!");
-})
+
+// Export the app for Vercel serverless functions
+export default app
