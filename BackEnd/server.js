@@ -4,7 +4,7 @@
 // import cors from "cors";
 // import cookieParser from "cookie-parser";
 
-// import authRoutes from "./routes/authRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 // import clientsRoutes from "./routes/clientsRoutes.js";
 // import generateInvoiceRoutes from "./routes/generateInvoiceRoutes.js";
 // import servicesRoutes from "./routes/serviesRoutes.js";
@@ -48,7 +48,7 @@ configDotenv();
 
 const app = express();
 
-// app.use("/auth", authRoutes);
+app.use("/auth", authRoutes);
 
 // DB connect middleware
 app.use(async (req, res, next) => {
