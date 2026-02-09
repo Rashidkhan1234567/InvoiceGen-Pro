@@ -190,9 +190,11 @@ export default function App() {
             >
               Reviews
             </a>
+             <Link to={"/signUp"}>
             <button className="bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition hover:shadow-xl">
-             <Link to={"/signUp"}>Get Started Free</Link> 
+             Get Started Free
             </button>
+             </Link> 
           </div>
 
           <button
@@ -220,11 +222,11 @@ export default function App() {
               <a href="#testimonials" className="text-gray-700 text-lg">
                 Reviews
               </a>
-              <button className="bg-black text-white px-8 py-4 rounded-full text-lg">
               <Link to={"/signUp"}>
+              <button className="bg-black text-white px-8 py-4 rounded-full text-lg">
                 Get Started Free
-                </Link>
               </button>
+                </Link>
             </div>
           </motion.div>
         )}
@@ -283,12 +285,12 @@ export default function App() {
               variants={textVariants}
               className="mt-10 flex flex-col sm:flex-row gap-6 w-full"
             >
-              <button className="bg-black text-white px-10 py-5 rounded-full text-lg font-semibold hover:bg-gray-800 transition hover:shadow-2xl flex items-center justify-center gap-3 group w-full sm:w-auto">
               <Link to={"/signUp"}>
+              <button className="bg-black text-white px-10 py-5 rounded-full text-lg font-semibold hover:bg-gray-800 transition hover:shadow-2xl flex items-center justify-center gap-3 group w-full sm:w-auto">
                 Start Generating Free
-              </Link>
                 <ArrowRight className="group-hover:translate-x-2 transition" />
               </button>
+              </Link>
               <button className="border-2 border-black text-black px-10 py-5 rounded-full text-lg font-semibold hover:bg-black hover:text-white transition w-full sm:w-auto">
                 Watch Demo
               </button>
