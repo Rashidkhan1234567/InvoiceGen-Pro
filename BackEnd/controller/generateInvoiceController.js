@@ -27,10 +27,12 @@ export const generateInvoice = async (req, res) => {
     console.log("📂 __dirname:", __dirname);
 
     // Try multiple path strategies for Vercel
+    // Try multiple path strategies for Vercel
     const strategies = [
-      path.join(process.cwd(), "BackEnd", "utils", `${template}.html`),
-      path.join(process.cwd(), "utils", `${template}.html`),
-      path.join(__dirname, "..", "utils", `${template}.html`)
+      path.join(process.cwd(), "BackEnd", "utils", `${template}.html`), // Local dev or specific structure
+      path.join(process.cwd(), "utils", `${template}.html`),            // Vercel root
+      path.join(__dirname, "..", "utils", `${template}.html`),          // Relative to controller
+      path.resolve(process.cwd(), "utils", `${template}.html`)          // Absolute resolve
     ];
 
     let templatePath = "";
@@ -42,8 +44,9 @@ export const generateInvoice = async (req, res) => {
     }
 
     if (!templatePath) {
-      console.error("❌ Template not found in strategies:", strategies);
-      return res.status(400).send(`Template not found. Checked: ${strategies.join(", ")}`);
+      console.error("❌ Template not found. Checked strategies:", strategies);
+      console.log("📂 Current directory content:", fs.readdirSync(process.cwd())); // Debug listing
+      return res.status(500).json({ success: false, message: `Template not found. Checked paths: ${strategies.join(", ")}` });
     }
 
     console.log("✅ Using template at:", templatePath);
@@ -149,7 +152,8 @@ export const generateInvoice = async (req, res) => {
   } catch (err) {
     console.error("🔥 Error in generateInvoice:", err);
     if (browser) await browser.close();
-    res.status(500).send(`Error generating PDF: ${err.message}`);
+    // Return JSON error so frontend can parse it
+    res.status(500).json({ success: false, message: `Error generating PDF: ${err.message}`, stack: err.stack });
   }
 };
 
@@ -179,7 +183,7 @@ export const downloadSavedInvoice = async (req, res) => {
 
         if (!templatePath) {
             console.error("❌ Template not found in strategies:", strategies);
-            return res.status(404).send(`Template not found. Checked: ${strategies.join(", ")}`);
+             return res.status(500).json({ success: false, message: `Template not found. Checked: ${strategies.join(", ")}` });
         }
 
         console.log("✅ Using template at:", templatePath);
@@ -282,6 +286,6 @@ export const downloadSavedInvoice = async (req, res) => {
     } catch (err) {
         console.error("🔥 Error downloading PDF:", err);
         if (browser) await browser.close();
-        res.status(500).send(`Error downloading PDF: ${err.message}`);
+        res.status(500).json({ success: false, message: `Error downloading PDF: ${err.message}` });
     }
 };
