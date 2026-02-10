@@ -70,7 +70,7 @@ export  const sendVerificationMail = async (email, verificationCode, verificatio
     `;
 
     const info = await transporter.sendMail({
-      from: '"InvoiceGen" <invoicegenbusiness@gmail.com>',
+      from: `"InvoiceGen" <${process.env.SMTP_USER}>`,
       to: email,
       subject: "Email Verification ✔",
        html: htmlContent,
@@ -176,7 +176,7 @@ export const welcomeMail = async(email) =>{
 
       `
       const info = await transporter.sendMail({
-        from: '"InvoiceGen" <invoicegenbusiness@gmail.com>',
+        from: `"InvoiceGen" <${process.env.SMTP_USER}>`,
         to: email,
         subject: "WellCome ✔",
          html: htmlContent,
